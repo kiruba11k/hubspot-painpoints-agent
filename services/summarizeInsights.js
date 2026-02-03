@@ -1,22 +1,33 @@
-import { openai } from "../config/openai.js";
+import { groq } from "../config/groq.js";
 
 export async function summarizeSegmentInsights(painPoints, metadata) {
-  const res = await openai.chat.completions.create({
-    model: "gpt-4o",
+  const completion = await groq.chat.completions.create({
+    model: "llama3-70b-8192",
     temperature: 0.3,
-    messages: [{
-      role: "user",
-      content: `
-Summarize this segment using only provided insights.
-
-Metadata:
+    messages: [
+      {
+        role: "system",
+        content:
+          "You summarize CRM-driven buyer insights. Do NOT invent data."
+      },
+      {
+        role: "user",
+        content: `
+Segment Metadata:
 ${JSON.stringify(metadata)}
 
 Pain Points:
 ${JSON.stringify(painPoints)}
+
+Produce a clear markdown summary with:
+- Who this segment is
+- Top pains
+- Why they care
+- Objections
 `
-    }]
+      }
+    ]
   });
 
-  return res.choices[0].message.content;
+  return completion.choices[0].message.content;
 }
