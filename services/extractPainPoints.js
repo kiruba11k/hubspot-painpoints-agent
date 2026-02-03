@@ -1,23 +1,41 @@
-import { openai } from "../config/openai.js";
+import { groq } from "../config/groq.js";
 
 export async function extractPainPoints(dataset) {
   const blob = dataset.map(d => d.rawText).join("\n");
 
-  const res = await openai.chat.completions.create({
-    model: "gpt-4o",
+  const completion = await groq.chat.completions.create({
+    model: "llama3-70b-8192",
     temperature: 0.2,
-    messages: [{
-      role: "user",
-      content: `
-Analyze real CRM data and return 3–7 pain points.
-Show frequency and examples.
+    messages: [
+      {
+        role: "system",
+        content:
+          "You analyze CRM data to extract recurring buyer pain points. Output STRICT JSON only."
+      },
+      {
+        role: "user",
+        content: `
+Analyze the following REAL CRM data.
+- Group similar pains
+- Rank by frequency
+- Provide example snippets
+
 DATA:
 ${blob}
 
-Return strict JSON only.
+Return JSON:
+[
+  {
+    "label": "",
+    "description": "",
+    "frequency": "",
+    "examples": []
+  }
+]
 `
-    }]
+      }
+    ]
   });
 
-  return JSON.parse(res.choices[0].message.content);
+  return JSON.parse(completion.choices[0].message.content);
 }
