@@ -1,21 +1,34 @@
-import { openai } from "../config/openai.js";
+import { groq } from "../config/groq.js";
 
 export async function generateMessaging(painPoints) {
-  const res = await openai.chat.completions.create({
-    model: "gpt-4o",
+  const completion = await groq.chat.completions.create({
+    model: "llama3-70b-8192",
     temperature: 0.4,
-    messages: [{
-      role: "user",
-      content: `
-Create email hooks, headlines and sales talk tracks
-for each pain point below.
+    messages: [
+      {
+        role: "system",
+        content:
+          "You generate marketing and sales messaging grounded in CRM pain points."
+      },
+      {
+        role: "user",
+        content: `
+Generate messaging for each pain point below.
 
+For each pain:
+- 3 email subject lines
+- 2 opening hooks
+- 1 headline + subhead
+- 3 sales talk-track bullets
+
+Pain Points:
 ${JSON.stringify(painPoints)}
 
-Return JSON only.
+Return STRICT JSON only.
 `
-    }]
+      }
+    ]
   });
 
-  return JSON.parse(res.choices[0].message.content);
+  return JSON.parse(completion.choices[0].message.content);
 }
